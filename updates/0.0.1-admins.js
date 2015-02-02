@@ -7,43 +7,30 @@
  * module.exports = function(done) { ... }
  */
 
-exports.create = {
-	User: [
-		{ 'name.first': 'Admin', 'name.last': 'User', email: 'user@keystonejs.com', password: 'admin', isAdmin: true }
-	]
-};
-
-/*
-
-// This is the long-hand version of the functionality above:
-
 var keystone = require('keystone'),
 	async = require('async'),
 	User = keystone.list('User');
 
 var admins = [
-	{ email: 'user@keystonejs.com', password: 'admin', name: { first: 'Admin', last: 'User' } }
+	{ 'login': 'admin', password: 'admin', isAdmin: true }
 ];
 
 function createAdmin(admin, done) {
-	
-	var newAdmin = new User.model(admin);
-	
-	newAdmin.isAdmin = true;
-	newAdmin.save(function(err) {
-		if (err) {
-			console.error("Error adding admin " + admin.email + " to the database:");
-			console.error(err);
-		} else {
-			console.log("Added admin " + admin.email + " to the database.");
-		}
-		done(err);
+	User.model.findOne({ login: admin.login }).exec(function(err, user) {
+		var newAdmin = new User.model(admin);
+		newAdmin.isAdmin = true;
+		newAdmin.save(function(err) {
+			if (err) {
+				console.error("Error adding admin " + admin.login + " to the database:");
+				console.error(err);
+			} else {
+				console.log("Added admin " + admin.login + " to the database.");
+			}
+			done();
+		});
 	});
-	
 }
 
 exports = module.exports = function(done) {
 	async.forEach(admins, createAdmin, done);
 };
-
-*/

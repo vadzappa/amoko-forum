@@ -10,17 +10,21 @@ var keystone = require('keystone'),
 // See http://keystonejs.com/guide/config for available options
 // and documentation.
 
+var adminLogin = function adminLogin(req, res, next) {
+	next();
+};
+
 keystone.init({
 
 	'name': 'Amoko Консультант',
 	'brand': 'Amoko Консультант',
-	
+
 	'less': 'public',
 	'static': 'public',
 	'favicon': 'public/favicon.ico',
 	'views': 'templates/views',
 	'view engine': 'hbs',
-	
+
 	'custom engine': handlebars.create({
 		layoutsDir: 'templates/views/layouts',
 		partialsDir: 'templates/views/partials',
@@ -28,11 +32,12 @@ keystone.init({
 		helpers: new require('./templates/views/helpers')(),
 		extname: '.hbs'
 	}).engine,
-	
+
 	'auto update': true,
 	'session': true,
-	'auth': true,
+	'auth': adminLogin,
 	'user model': 'User',
+	'mongo': process.env.MONGO_URI || process.env.MONGOLAB_URI || 'mongodb://localhost/amoko',
 	'cookie secret': 'e{y{T^[A$D}vW1D"+UPpkX%TrOrXb3?8:fWE@SrToL{z-RhT|,L[F-[Iimg(~MgH'
 
 });
