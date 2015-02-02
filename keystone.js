@@ -4,26 +4,37 @@ require('dotenv').load();
 
 // Require keystone
 var keystone = require('keystone'),
-	handlebars = require('express-handlebars');
+	handlebars = require('express-handlebars'),
+	isProduction = !!process.env.PROD,
+	prepareLogger = function () {
+		return {
+			log: function () {
+				console.log('loggin smth');
+				//console.log.apply(console.log, arguments);
+			}
+		}
+	};
+
 
 // Initialise Keystone with your project's configuration.
 // See http://keystonejs.com/guide/config for available options
 // and documentation.
-
-var adminLogin = function adminLogin(req, res, next) {
-	next();
-};
 
 keystone.init({
 
 	'name': 'Amoko Консультант',
 	'brand': 'Amoko Консультант',
 
+	'port': process.env.PORT || 3000,
+
 	'less': 'public',
 	'static': 'public',
 	'favicon': 'public/favicon.ico',
 	'views': 'templates/views',
+	'view cache': isProduction,
 	'view engine': 'hbs',
+	'compress': isProduction,
+	'headless': true,
 
 	'custom engine': handlebars.create({
 		layoutsDir: 'templates/views/layouts',
@@ -34,8 +45,10 @@ keystone.init({
 	}).engine,
 
 	'auto update': true,
-	'session': true,
-	'auth': adminLogin,
+	'session': false,
+	'auth': function (req, res, next) {
+		res.redirect('/');
+	},
 	'user model': 'User',
 	'mongo': process.env.MONGO_URI || process.env.MONGOLAB_URI || 'mongodb://localhost/amoko',
 	'cookie secret': 'e{y{T^[A$D}vW1D"+UPpkX%TrOrXb3?8:fWE@SrToL{z-RhT|,L[F-[Iimg(~MgH'
@@ -54,7 +67,8 @@ keystone.set('locals', {
 	_: require('underscore'),
 	env: keystone.get('env'),
 	utils: keystone.utils,
-	editable: keystone.content.editable
+	editable: keystone.content.editable,
+	logger: prepareLogger()
 });
 
 // Load your project's Routes

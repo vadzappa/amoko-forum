@@ -24,10 +24,10 @@ var keystone = require('keystone'),
 	session = require('express-session');
 
 keystone.pre('routes', middleware.loginFromQuery);
+keystone.pre('routes', middleware.storeLoginToSession);
 
 // Common Middleware
 keystone.pre('routes', middleware.initLocals);
-keystone.pre('render', middleware.flashMessages);
 
 // Handle 404 errors
 keystone.set('404', function (req, res, next) {
@@ -46,12 +46,11 @@ exports = module.exports = function (app) {
 		secret: 'keyboard cat',
 		resave: false,
 		saveUninitialized: true,
-		cookie: { maxAge: 60000, secure: true }
+		cookie: {path: '/', httpOnly: true, secure: false, maxAge: 60 * 60 * 1000}
 	}));
 
 	// Views
-	app.get('/', routes.views.index);
-	app.get('/topics', routes.views.topics);
+	app.all('/', routes.views.topics);
 
 
 	// NOTE: To protect a route so that only admins can see it, use the requireUser middleware:

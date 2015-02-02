@@ -8,22 +8,80 @@
  * modules in your project's /lib directory.
  */
 
-var _ = require('underscore');
+var _ = require('underscore'),
+	keystone = require('keystone'),
+	User = keystone.list('User');
 
-var getUserFromQuery = function getUserFromQuery(req) {
-
+var findAndStoreUserByLogin = function (login, req, next) {
+		if ('admin' === login){
+			return next();
+		}
+		User.model
+			.findOne()
+			.where('login', login)
+			.exec(function (err, user) {
+				if (err) {
+					return next(err);
+				}
+				if (user != null) {
+					req.user = user;
+					return next();
+				}
+				// create user
+				user = new User.model({
+					login: login,
+					isAdmin: false
+				});
+				user.save(function (err) {
+					// post has been saved
+					if (!err) {
+						req.user = user;
+					}
+					next(err);
+				});
+			});
 	},
-	getUserFromSession = function getUserFromSession(req) {
-
+	storeUserFromQuery = function storeUserFromQuery(req, next) {
+		findAndStoreUserByLogin(req.query.user, req, next);
+	},
+	storeUserFromSession = function storeUserFromSession(req, next) {
+		findAndStoreUserByLogin(req.session.user.login, req, next);
 	};
 
 exports.loginFromQuery = function loginFromQuery(req, res, next) {
 	if (req.query.user) {
-		req.user = getUserFromQuery(req);
-	} else if (req.session.user) {
-		req.user = getUserFromSession(req);
+		storeUserFromQuery(req, function (err) {
+			if (err) {
+				req.locals.logger.log(err);
+			}
+			next()
+		});
+	} else if (req.session && req.session.user) {
+		storeUserFromSession(req, function (err) {
+			if (err) {
+				req.locals.logger.log(err);
+			}
+			next()
+		});
+	} else {
+		next();
 	}
-	next();
+};
+
+exports.storeLoginToSession = function storeLoginToSession(req, res, next) {
+	if (req.user) {
+		req.session.user = req.user;
+		req.session.save(function (err) {
+
+			if (err) {
+				req.locals.logger.log(err);
+			}
+
+			next();
+		});
+	} else {
+		next();
+	}
 };
 
 /**
@@ -39,33 +97,11 @@ exports.initLocals = function (req, res, next) {
 	var locals = res.locals;
 
 	locals.navLinks = [
-		{label: 'Главная', key: 'home', href: '/'},
-		{label: 'Консультация', key: 'topics', href: '/topics'}
+		{label: 'Консультация', key: 'home', href: '/'}
 	];
 
 	locals.user = req.user;
-
-	next();
-
-};
-
-
-/**
- Fetches and clears the flashMessages before a view is rendered
- */
-
-exports.flashMessages = function (req, res, next) {
-
-	var flashMessages = {
-		info: req.flash('info'),
-		success: req.flash('success'),
-		warning: req.flash('warning'),
-		error: req.flash('error')
-	};
-
-	res.locals.messages = _.any(flashMessages, function (msgs) {
-		return msgs.length;
-	}) ? flashMessages : false;
+	locals.data = {};
 
 	next();
 
@@ -77,12 +113,5 @@ exports.flashMessages = function (req, res, next) {
  */
 
 exports.requireUser = function (req, res, next) {
-
-	if (!req.user) {
-		req.flash('error', 'Please sign in to access this page.');
-		res.redirect('/keystone/signin');
-	} else {
-		next();
-	}
-
+	next();
 };

@@ -1,4 +1,34 @@
 {{!< default}}
 <div class="container">
-	Вопросы будут тут :)
+    <form method="post" class="row">
+        <input type="hidden" name="action" value="topic.create"/>
+		
+        <div class="form-group">
+			<label for="topic-title">Тема вопроса</label>
+            <input class="form-control" type="text" id="topic-title" name="title" placeholder="Тема вопроса">
+        </div>
+		
+		<div class="form-group">
+			<label for="topic-content">Содержание</label>
+			<textarea class="form-control" id="topic-content" name="content" placeholder="Содержание"></textarea>
+        </div>
+
+        <input class="btn btn-default" type="submit" value="Сохранить">
+    </form>
+	<div class="row">
+		{{> pagination}}
+	</div>
+	
+	{{#if data.posts.results.length}}
+		{{#each data.posts.results}}
+			<div class="row">
+				<h4>{{title}}</h4>
+				<h7>{{#date format='DD-MM-YYYY' }}updated{{/date}}</h7>
+				<p>{{content}}</p>
+			</div>
+		{{/each}}
+	{{/if}}
+    <div class="row">
+		{{> pagination}}
+    </div>
 </div>
