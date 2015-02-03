@@ -8,60 +8,51 @@
  * modules in your project's /lib directory.
  */
 
-var _ = require('underscore'),
+var _ = require('lodash'),
 	keystone = require('keystone'),
-	User = keystone.list('User');
+	User = keystone.list('User'),
+	loginUtils = require('../utils/loginUtil');
 
 var findAndStoreUserByLogin = function (login, req, next) {
-		if ('admin' === login){
-			return next();
-		}
-		User.model
-			.findOne()
-			.where('login', login)
-			.exec(function (err, user) {
-				if (err) {
-					return next(err);
-				}
-				if (user != null) {
-					req.user = user;
-					return next();
-				}
-				// create user
-				user = new User.model({
-					login: login,
-					isAdmin: false
-				});
-				user.save(function (err) {
-					// post has been saved
-					if (!err) {
-						req.user = user;
-					}
-					next(err);
-				});
-			});
+		loginUtils.findAndStoreUserByLogin(login, function (result) {
+			if (_.isError(result)) {
+				return next(result);
+			}
+			if (result != null) {
+				req.user = result;
+			}
+			next();
+		});
 	},
 	storeUserFromQuery = function storeUserFromQuery(req, next) {
 		findAndStoreUserByLogin(req.query.user, req, next);
 	},
 	storeUserFromSession = function storeUserFromSession(req, next) {
-		findAndStoreUserByLogin(req.session.user.login, req, next);
+		loginUtils.findUserByLogin(req.session.user.login, function (result) {
+			if (_.isError(result)) {
+				return next(result);
+			}
+			if (result != null) {
+				req.user = result;
+			}
+			next();
+		});
 	};
 
 exports.loginFromQuery = function loginFromQuery(req, res, next) {
 	if (req.query.user) {
 		storeUserFromQuery(req, function (err) {
 			if (err) {
-				req.locals.logger.log(err);
+				req.logger.log(err);
 			}
-			next()
+			next();
 		});
 	} else if (req.session && req.session.user) {
 		storeUserFromSession(req, function (err) {
 			if (err) {
-				req.locals.logger.log(err);
+				req.logger.log(err);
 			}
-			next()
+			next();
 		});
 	} else {
 		next();
@@ -69,19 +60,7 @@ exports.loginFromQuery = function loginFromQuery(req, res, next) {
 };
 
 exports.storeLoginToSession = function storeLoginToSession(req, res, next) {
-	if (req.user) {
-		req.session.user = req.user;
-		req.session.save(function (err) {
-
-			if (err) {
-				req.locals.logger.log(err);
-			}
-
-			next();
-		});
-	} else {
-		next();
-	}
+	loginUtils.storeUserToSession(req.user, req, next);
 };
 
 /**
@@ -114,4 +93,21 @@ exports.initLocals = function (req, res, next) {
 
 exports.requireUser = function (req, res, next) {
 	next();
+};
+
+exports.flashMessages = function (req, res, next) {
+
+	var flashMessages = {
+		info: req.flash('info'),
+		success: req.flash('success'),
+		warning: req.flash('warning'),
+		error: req.flash('error')
+	};
+
+	res.locals.messages = _.any(flashMessages, function (msgs) {
+		return msgs.length;
+	}) ? flashMessages : false;
+
+	next();
+
 };

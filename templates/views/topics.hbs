@@ -15,20 +15,32 @@
 
         <input class="btn btn-default" type="submit" value="Сохранить">
     </form>
-	<div class="row">
-		{{> pagination}}
-	</div>
 	
 	{{#if data.posts.results.length}}
+        <div class="row">
+			{{> pagination}}
+        </div>
 		{{#each data.posts.results}}
 			<div class="row">
 				<h4>{{title}}</h4>
-				<h7>{{#date format='DD-MM-YYYY' }}updated{{/date}}</h7>
+				<h6>
+					{{#if @root.user.isAdmin}}
+                        Пользователь {{author.login}}:
+					{{/if}}
+					{{#date format='DD-MM-YYYY' }}updated{{/date}}
+				</h6>
+				
 				<p>{{content}}</p>
+				{{#if @root.user.isAdmin}}
+                    <a href="/answer/{{id}}">Ответить</a>
+				{{/if}}
+				{{#unless @root.user.isAdmin}}
+                    <a href="/comment/{{id}}">Комментировать</a>
+				{{/unless}}
 			</div>
 		{{/each}}
+        <div class="row">
+			{{> pagination}}
+        </div>
 	{{/if}}
-    <div class="row">
-		{{> pagination}}
-    </div>
 </div>

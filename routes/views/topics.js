@@ -18,6 +18,10 @@ exports = module.exports = function (req, res) {
 	view.on('init', function (next) {
 
 		if (!locals.user) {
+			req.flash('warning', {
+				title: 'Пожалуйста, войдите в систему.',
+				detail: 'Для входа используйте Amoko приложение (кнопка консультант)'
+			});			
 			return next();
 		}
 
@@ -26,9 +30,12 @@ exports = module.exports = function (req, res) {
 			perPage: 10,
 			maxPages: 10
 		})
-			.where('author', locals.user.id)
 			.sort('-updated')
 			.populate('author replies');
+
+		if (!locals.user.isAdmin) {
+			q.where('author', locals.user.id);
+		}
 
 		q.exec(function (err, results) {
 			locals.data.posts = results;
@@ -46,7 +53,7 @@ exports = module.exports = function (req, res) {
 
 		newTopic.save(function (err) {
 			if (err) {
-				req.locals.logger.log(err);
+				req.logger.log(err);
 			}
 			res.redirect('/');
 		});

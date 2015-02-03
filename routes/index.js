@@ -21,13 +21,39 @@
 var keystone = require('keystone'),
 	middleware = require('./middleware'),
 	importRoutes = keystone.importer(__dirname),
-	session = require('express-session');
+	session = require('express-session'),
+	logger = {
+		log: function () {
+			//console.log('loggin smth');
+			console.log.apply(console.log, arguments);
+		}
+	},
+	prepareLogger = function () {
+		return logger;
+	},
+	sessionMiddleware = session({
+		secret: 'keyboard cat',
+		resave: false,
+		saveUninitialized: true,
+		cookie: {path: '/', httpOnly: true, secure: false, maxAge: 60 * 60 * 1000}
+	}),
+	loggerMiddleware = function (req, res, next) {
+		if (!req.logger) {
+			req.logger = prepareLogger();
+		}
+		next();
+	};
+
+keystone.pre('routes', sessionMiddleware);
+keystone.pre('routes', loggerMiddleware);
 
 keystone.pre('routes', middleware.loginFromQuery);
 keystone.pre('routes', middleware.storeLoginToSession);
 
 // Common Middleware
 keystone.pre('routes', middleware.initLocals);
+
+keystone.pre('render', middleware.flashMessages);
 
 // Handle 404 errors
 keystone.set('404', function (req, res, next) {
@@ -42,15 +68,9 @@ var routes = {
 // Setup Route Bindings
 exports = module.exports = function (app) {
 
-	app.use(session({
-		secret: 'keyboard cat',
-		resave: false,
-		saveUninitialized: true,
-		cookie: {path: '/', httpOnly: true, secure: false, maxAge: 60 * 60 * 1000}
-	}));
-
 	// Views
 	app.all('/', routes.views.topics);
+	app.all('/admin', routes.views.admin);
 
 
 	// NOTE: To protect a route so that only admins can see it, use the requireUser middleware:

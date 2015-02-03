@@ -6,14 +6,7 @@ require('dotenv').load();
 var keystone = require('keystone'),
 	handlebars = require('express-handlebars'),
 	isProduction = !!process.env.PROD,
-	prepareLogger = function () {
-		return {
-			log: function () {
-				console.log('loggin smth');
-				//console.log.apply(console.log, arguments);
-			}
-		}
-	};
+	_ = require('lodash');
 
 
 // Initialise Keystone with your project's configuration.
@@ -35,6 +28,7 @@ keystone.init({
 	'view engine': 'hbs',
 	'compress': isProduction,
 	'headless': true,
+	'logger': isProduction ? 'tiny' : 'dev',
 
 	'custom engine': handlebars.create({
 		layoutsDir: 'templates/views/layouts',
@@ -45,7 +39,6 @@ keystone.init({
 	}).engine,
 
 	'auto update': true,
-	'session': false,
 	'auth': function (req, res, next) {
 		res.redirect('/');
 	},
@@ -64,11 +57,10 @@ keystone.import('models');
 // for each request) should be added to ./routes/middleware.js
 
 keystone.set('locals', {
-	_: require('underscore'),
+	_: require('lodash'),
 	env: keystone.get('env'),
 	utils: keystone.utils,
-	editable: keystone.content.editable,
-	logger: prepareLogger()
+	editable: keystone.content.editable
 });
 
 // Load your project's Routes
