@@ -11,7 +11,7 @@
 
             <div class="form-group">
                 <label for="topic-content">Содержание</label>
-                <textarea class="form-control" id="topic-content" name="content" placeholder="Содержание"></textarea>
+                <textarea rows="6" class="form-control" id="topic-content" name="content" placeholder="Содержание"></textarea>
             </div>
 
             <input class="btn btn-default" type="submit" value="Сохранить">
@@ -27,12 +27,12 @@
 				<h4>{{title}}</h4>
 				<h6>
 					{{#if @root.user.isAdmin}}
-                        Пользователь {{author.login}}:
+                        Пользователь <b>{{author.login}}</b>:
 					{{/if}}
 					{{#date format='DD-MM-YYYY' }}updated{{/date}}
 				</h6>
 				
-				<p>{{content}}</p>
+				<p>{{{content.html}}}</p>
                 <a class="btn btn-default" href="/answer/{{id}}">Ответить/Комментировать</a>
 			</div>
 		{{/each}}

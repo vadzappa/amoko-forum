@@ -1,26 +1,26 @@
 {{!< default}}
 <div class="container">
-	<form method="post" class="row">
-		<input type="hidden" name="action" value="topic.reply"/>
-		<div class="form-group">
-			<label for="reply-content">Ответ/Комментарий</label>
-			<textarea class="form-control" id="reply-content" name="content" placeholder="Ответ/Комментарий"></textarea>
-		</div>
-
-		<input class="btn btn-default" type="submit" value="Сохранить">
-	</form>
-
     <div class="row">
         <h4>{{topic.title}}</h4>
         <h6>
 			{{#if @root.user.isAdmin}}
-                Пользователь {{topic.author.login}}:
+                Пользователь <b>{{topic.author.login}}</b>:
 			{{/if}}
 			{{#date format='DD-MM-YYYY' }}topic.updated{{/date}}
         </h6>
 
-        <p>{{topic.content}}</p>
-    </div>	
+        <p>{{{topic.content.html}}}</p>
+    </div>
+
+    <form method="post" class="row">
+        <input type="hidden" name="action" value="topic.reply"/>
+        <div class="form-group">
+            <label for="reply-content">Ответ/Комментарий</label>
+            <textarea rows="4" class="form-control" id="reply-content" name="content" placeholder="Ответ/Комментарий"></textarea>
+        </div>
+
+        <input class="btn btn-default" type="submit" value="Сохранить">
+    </form>	
 	
 	{{#if data.posts.results.length}}
         <div class="row">
@@ -32,11 +32,11 @@
 		{{#each data.posts.results}}
             <div class="row">
                 <h6>
-					Пользователь {{author.login}}:
+					Пользователь <b>{{author.login}}</b>:
 					{{#date format='DD-MM-YYYY' }}updated{{/date}}
                 </h6>
 
-                <p>{{content}}</p>
+                <p>{{{content.html}}}</p>
             </div>
 		{{/each}}
         <div class="row">

@@ -5,7 +5,8 @@ var _ = require('lodash'),
 	keystone = require('keystone'),
 	Topic = keystone.list('Topic'),
 	Reply = keystone.list('Reply'),
-	userUtils = require('../../utils/userUtils');
+	userUtils = require('../../utils/userUtils'),
+	mdUtils = require('../../utils/mdUtil');
 
 _.mixin(require('underscore.deferred'));
 
@@ -23,6 +24,25 @@ var internals = {
 
 		q.exec(function (err, topic) {
 			deferred.resolve(err || topic);
+		});
+		return deferred.promise();
+	},
+	findRepliesByTopic: function findRepliesByTopic(id, page) {
+		var deferred = new _.Deferred();
+
+		var q = Reply
+			.paginate({
+				page: page || 1,
+				perPage: 10,
+				maxPages: 10
+			})
+			.find()
+			.where('topic', id)
+			.sort('-updated')
+			.populate('author');
+
+		q.exec(function (err, replies) {
+			deferred.resolve(err || replies);
 		});
 		return deferred.promise();
 	}
@@ -44,7 +64,7 @@ exports = module.exports = function (req, res) {
 			return res.redirect('/');
 		}
 
-		_.when(internals.findTopicByIdAndUser(req.params.topicId, locals.user)).then(function (topicResult) {
+		_.when([internals.findTopicByIdAndUser(req.params.topicId, locals.user), internals.findRepliesByTopic(req.params.topicId, req.query.page)]).then(function (topicResult, repliesResult) {
 			if (_.isError(topicResult)) {
 				req.logger.log(topicResult);
 				return res.redirect('/');
@@ -55,7 +75,7 @@ exports = module.exports = function (req, res) {
 			}
 
 			locals.topic = topicResult;
-			locals.data.posts = topicResult.replies;
+			locals.data.posts = repliesResult && !_.isError(repliesResult) ? repliesResult : [];
 			return next();
 		});
 
@@ -99,9 +119,9 @@ exports = module.exports = function (req, res) {
 
 				var newReply = new Reply.model({
 					author: userResult,
-					topic: topicResult,
-					content: req.body.content
+					topic: topicResult
 				});
+				newReply.content.html = mdUtils.fromMarkdown(req.body.content);
 				newReply.save(function (err) {
 					if (err) {
 						req.logger.log(err);

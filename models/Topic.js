@@ -17,7 +17,7 @@ Topic.add({
 	updated: {type: Types.Datetime, default: Date.now, required: true},
 	author: {type: Types.Relationship, ref: 'User', required: true, initial: true},
 	title: {type: String, required: true, initial: true},
-	content: {type: Types.Textarea, initial: true}
+	content: {type: Types.Markdown, initial: true}
 });
 
 /**

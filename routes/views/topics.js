@@ -5,7 +5,8 @@
 var _ = require('lodash'),
 	keystone = require('keystone'),
 	Topic = keystone.list('Topic'),
-	userUtils = require('../../utils/userUtils');
+	userUtils = require('../../utils/userUtils'),
+	mdUtils = require('../../utils/mdUtil');
 
 _.mixin(require('underscore.deferred'));
 
@@ -35,7 +36,7 @@ exports = module.exports = function (req, res) {
 			maxPages: 10
 		})
 			.sort('-updated')
-			.populate('author replies');
+			.populate('author');
 
 		if (!locals.user.isAdmin) {
 			q.where('author', locals.user._id);
@@ -68,10 +69,9 @@ exports = module.exports = function (req, res) {
 
 			var newTopic = new Topic.model({
 				author: result,
-				title: req.body.title,
-				content: req.body.content
+				title: req.body.title
 			});
-
+			newTopic.content.html = mdUtils.fromMarkdown(req.body.content);
 			newTopic.save(function (err) {
 				if (err) {
 					req.logger.log(err);
