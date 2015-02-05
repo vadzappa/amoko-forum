@@ -6,3 +6,4 @@ Configuration
 3. set desired _NODE_PORT_
 4. set _NODE_ADMIN_PASSWORD_
 5. set _NODE_COOKIE_SECRET_
+6. set _NODE_PASSWORD_
