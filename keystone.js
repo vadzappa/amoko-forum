@@ -5,7 +5,7 @@ require('dotenv').load();
 // Require keystone
 var keystone = require('keystone'),
 	handlebars = require('express-handlebars'),
-	isProduction = !!process.env.PROD,
+	isProduction = !!process.env.NODE_IS_PRODUCTION,
 	_ = require('lodash');
 
 
@@ -18,7 +18,7 @@ keystone.init({
 	'name': 'Amoko Консультант',
 	'brand': 'Amoko Консультант',
 
-	'port': process.env.PORT || 3000,
+	'port': process.env.NODE_PORT || 3000,
 
 	'less': 'public',
 	'static': 'public',

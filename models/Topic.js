@@ -16,7 +16,6 @@ Topic.add({
 	created: {type: Types.Datetime, default: Date.now, required: true},
 	updated: {type: Types.Datetime, default: Date.now, required: true},
 	author: {type: Types.Relationship, ref: 'User', required: true, initial: true},
-	replies: {type: Types.Relationship, ref: 'Reply', many: true},
 	title: {type: String, required: true, initial: true},
 	content: {type: Types.Textarea, initial: true}
 });

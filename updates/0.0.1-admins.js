@@ -12,7 +12,7 @@ var keystone = require('keystone'),
 	User = keystone.list('User');
 
 var admins = [
-	{ 'login': 'admin', password: process.env.ADMIN_PASSWORD || 'admin', isAdmin: true }
+	{ 'login': 'admin', password: process.env.NODE_ADMIN_PASSWORD || 'admin', isAdmin: true }
 ];
 
 function createAdmin(admin, done) {

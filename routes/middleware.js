@@ -13,101 +13,75 @@ var _ = require('lodash'),
 	User = keystone.list('User'),
 	loginUtils = require('../utils/loginUtil');
 
-var findAndStoreUserByLogin = function (login, req, next) {
+var internals = {
+	findAndStoreUserByLogin: function findAndStoreUserByLogin(login, req, next) {
 		loginUtils.findAndStoreUserByLogin(login, function (result) {
 			if (_.isError(result)) {
 				return next(result);
 			}
-			if (result != null) {
-				req.user = result;
-			}
-			next();
+			loginUtils.storeUserToSession(result, req, next);
 		});
 	},
-	storeUserFromQuery = function storeUserFromQuery(req, next) {
-		findAndStoreUserByLogin(req.query.user, req, next);
-	},
-	storeUserFromSession = function storeUserFromSession(req, next) {
-		loginUtils.findUserByLogin(req.session.user.login, function (result) {
-			if (_.isError(result)) {
-				return next(result);
-			}
-			if (result != null) {
-				req.user = result;
-			}
-			next();
-		});
-	};
-
-exports.loginFromQuery = function loginFromQuery(req, res, next) {
-	if (req.query.user) {
-		storeUserFromQuery(req, function (err) {
-			if (err) {
-				req.logger.log(err);
-			}
-			next();
-		});
-	} else if (req.session && req.session.user) {
-		storeUserFromSession(req, function (err) {
-			if (err) {
-				req.logger.log(err);
-			}
-			next();
-		});
-	} else {
-		next();
+	storeUserFromQuery: function storeUserFromQuery(req, next) {
+		internals.findAndStoreUserByLogin(req.query.user, req, next);
 	}
 };
 
-exports.storeLoginToSession = function storeLoginToSession(req, res, next) {
-	loginUtils.storeUserToSession(req.user, req, next);
-};
+module.exports = {
+	loginFromQuery: function loginFromQuery(req, res, next) {
+		if (req.query.user) {
+			internals.storeUserFromQuery(req, function (err) {
+				if (err) {
+					req.logger.log(err);
+				}
+				next();
+			});
+		} else {
+			next();
+		}
+	},
+	initLocals: function initLocals(req, res, next) {
 
-/**
- Initialises the standard view locals
+		var locals = res.locals;
 
- The included layout depends on the navLinks array to generate
- the navigation in the header, you may wish to change this array
- or replace it with your own templates / logic.
- */
+		locals.navLinks = [
+			{label: 'Консультация', key: 'home', href: '/'}
+		];
 
-exports.initLocals = function (req, res, next) {
+		locals.data = {};
+		
+		req.session.reload(function(err) {
+			// session updated
+			if (err) {
+				req.logger.log(err);
+			} else {
+				locals.user = req.session && req.session.user;
+			}
+			next();
+		});
 
-	var locals = res.locals;
+	},
+	flashMessages: function flashMessages(req, res, next) {
 
-	locals.navLinks = [
-		{label: 'Консультация', key: 'home', href: '/'}
-	];
+		var flashMessages = {
+			info: req.flash('info'),
+			success: req.flash('success'),
+			warning: req.flash('warning'),
+			error: req.flash('error')
+		};
 
-	locals.user = req.user;
-	locals.data = {};
+		res.locals.messages = _.any(flashMessages, function (msgs) {
+			return msgs.length;
+		}) ? flashMessages : false;
 
-	next();
+		next();
 
-};
-
-
-/**
- Prevents people from accessing protected pages when they're not signed in
- */
-
-exports.requireUser = function (req, res, next) {
-	next();
-};
-
-exports.flashMessages = function (req, res, next) {
-
-	var flashMessages = {
-		info: req.flash('info'),
-		success: req.flash('success'),
-		warning: req.flash('warning'),
-		error: req.flash('error')
-	};
-
-	res.locals.messages = _.any(flashMessages, function (msgs) {
-		return msgs.length;
-	}) ? flashMessages : false;
-
-	next();
-
+	},
+	requireLogin: function requireLogin(req, res, next){
+		if (req.session && req.session.user){
+			next();
+		} else {
+			res.redirect('/');
+		}
+	}
 };

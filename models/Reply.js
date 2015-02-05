@@ -15,8 +15,8 @@ var Reply = new keystone.List('Reply');
 Reply.add({
 	created: {type: Types.Datetime, default: Date.now, required: true},
 	updated: {type: Types.Datetime, default: Date.now, required: true},
-	author: {type: Types.Relationship, ref: 'User', required: true, initial: true},
-	topic: {type: Types.Relationship, ref: 'Topic', required: true, initial: true},
+	author: {type: Types.Relationship, ref: 'User', index: true},
+	topic: {type: Types.Relationship, ref: 'Topic', index: true},
 	content: {type: Types.Textarea, initial: true}
 });
 

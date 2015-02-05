@@ -21,26 +21,16 @@
 var keystone = require('keystone'),
 	middleware = require('./middleware'),
 	importRoutes = keystone.importer(__dirname),
+	logger = require('../utils/logger'),
 	session = require('express-session'),
-	logger = {
-		log: function () {
-			//console.log('loggin smth');
-			console.log.apply(console.log, arguments);
-		}
-	},
-	prepareLogger = function () {
-		return logger;
-	},
 	sessionMiddleware = session({
-		secret: 'keyboard cat',
+		secret: process.env.NODE_COOKIE_SECRET || 'cookies_secret',
 		resave: false,
 		saveUninitialized: true,
 		cookie: {path: '/', httpOnly: true, secure: false, maxAge: 60 * 60 * 1000}
 	}),
 	loggerMiddleware = function (req, res, next) {
-		if (!req.logger) {
-			req.logger = prepareLogger();
-		}
+		req.logger = req.logger || logger;
 		next();
 	};
 
@@ -48,7 +38,6 @@ keystone.pre('routes', sessionMiddleware);
 keystone.pre('routes', loggerMiddleware);
 
 keystone.pre('routes', middleware.loginFromQuery);
-keystone.pre('routes', middleware.storeLoginToSession);
 
 // Common Middleware
 keystone.pre('routes', middleware.initLocals);
@@ -71,6 +60,9 @@ exports = module.exports = function (app) {
 	// Views
 	app.all('/', routes.views.topics);
 	app.all('/admin', routes.views.admin);
+
+	app.post('/', middleware.requireLogin, routes.views.topics);
+	app.all('/answer/:topicId', middleware.requireLogin, routes.views.answer);
 
 
 	// NOTE: To protect a route so that only admins can see it, use the requireUser middleware:

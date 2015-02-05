@@ -8,14 +8,14 @@ var _ = require('lodash'),
 
 
 exports.findAndStoreUserByLogin = function findAndStoreUserByLogin(login, next) {
-	if ('admin' === login) {
-		return next();
-	}
 	User.model
 		.findOne()
 		.where('login', login)
 		.exec(function (err, user) {
 			if (err || user) {
+				if (user && user.isAdmin) {
+					user = new Error('Possible try to hack ;)');
+				}
 				return next(err || user);
 			}
 			// create user
@@ -41,7 +41,12 @@ exports.findUserByLogin = function findUserByLogin(login, next) {
 
 exports.storeUserToSession = function storeUserToSession(user, req, next) {
 	if (user && req.session) {
-		req.session.user = user;
+		if (user.toObject && _.isFunction(user.toObject)) {
+			req.session.user = user.toObject();
+		} else {
+			req.session.user = user;
+		}
+
 		req.session.save(function (err) {
 
 			if (err) {

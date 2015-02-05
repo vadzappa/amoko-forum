@@ -9,7 +9,12 @@ var _ = require('lodash'),
 exports = module.exports = function (req, res) {
 
 	var view = new keystone.View(req, res),
-		locals = res.locals;
+		locals = res.locals,
+		loginErrorFlashMessage = function loginErrorFlashMessage() {
+			req.flash('error', {
+				title: 'Попытка входа не удалась. Попробуйте снова.'
+			});
+		}		;
 
 	// locals.section is used to set the currently selected
 	// item in the header navigation.
@@ -22,9 +27,7 @@ exports = module.exports = function (req, res) {
 		loginUtils.findUserByLogin(login, function (result) {
 			if (_.isError(result)) {
 				req.logger.log(result);
-				req.flash('error', {
-					title: 'Попытка входа не удалась. Попробуйте снова.'
-				});
+				loginErrorFlashMessage();
 				next();
 			} else {
 				var user = result;
@@ -33,9 +36,13 @@ exports = module.exports = function (req, res) {
 						loginUtils.storeUserToSession(user, req, function () {
 							res.redirect('/');
 						});
-
+					} else if (!isMatch) {
+						req.logger.log(new Error('Incorrect credentials during login as ' + login));
+						loginErrorFlashMessage();
+						next();						
 					} else {
 						req.logger.log(err);
+						loginErrorFlashMessage();
 						next();
 					}
 				});

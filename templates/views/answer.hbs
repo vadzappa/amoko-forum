@@ -1,0 +1,46 @@
+{{!< default}}
+<div class="container">
+	<form method="post" class="row">
+		<input type="hidden" name="action" value="topic.reply"/>
+		<div class="form-group">
+			<label for="reply-content">Ответ/Комментарий</label>
+			<textarea class="form-control" id="reply-content" name="content" placeholder="Ответ/Комментарий"></textarea>
+		</div>
+
+		<input class="btn btn-default" type="submit" value="Сохранить">
+	</form>
+
+    <div class="row">
+        <h4>{{topic.title}}</h4>
+        <h6>
+			{{#if @root.user.isAdmin}}
+                Пользователь {{topic.author.login}}:
+			{{/if}}
+			{{#date format='DD-MM-YYYY' }}topic.updated{{/date}}
+        </h6>
+
+        <p>{{topic.content}}</p>
+    </div>	
+	
+	{{#if data.posts.results.length}}
+        <div class="row">
+            <h3>Комментарии/Ответы</h3>
+        </div>
+        <div class="row">
+			{{> pagination}}
+        </div>
+		{{#each data.posts.results}}
+            <div class="row">
+                <h6>
+					Пользователь {{author.login}}:
+					{{#date format='DD-MM-YYYY' }}updated{{/date}}
+                </h6>
+
+                <p>{{content}}</p>
+            </div>
+		{{/each}}
+        <div class="row">
+			{{> pagination}}
+        </div>
+	{{/if}}
+</div>

@@ -2,8 +2,12 @@
  * Author: Vadim
  * Date: 2/2/2015
  */
-var keystone = require('keystone'),
-	Topic = keystone.list('Topic');
+var _ = require('lodash'),
+	keystone = require('keystone'),
+	Topic = keystone.list('Topic'),
+	userUtils = require('../../utils/userUtils');
+
+_.mixin(require('underscore.deferred'));
 
 exports = module.exports = function (req, res) {
 
@@ -15,13 +19,13 @@ exports = module.exports = function (req, res) {
 	locals.section = 'home';
 
 	// Load the posts
-	view.on('init', function (next) {
+	view.on('get', function (next) {
 
 		if (!locals.user) {
 			req.flash('warning', {
 				title: 'Пожалуйста, войдите в систему.',
 				detail: 'Для входа используйте Amoko приложение (кнопка консультант)'
-			});			
+			});
 			return next();
 		}
 
@@ -34,7 +38,7 @@ exports = module.exports = function (req, res) {
 			.populate('author replies');
 
 		if (!locals.user.isAdmin) {
-			q.where('author', locals.user.id);
+			q.where('author', locals.user._id);
 		}
 
 		q.exec(function (err, results) {
@@ -45,17 +49,35 @@ exports = module.exports = function (req, res) {
 	});
 
 	view.on('post', {action: 'topic.create'}, function (next) {
-		var newTopic = new Topic.model({
-			author: locals.user,
-			title: req.body.title,
-			content: req.body.content
-		});
 
-		newTopic.save(function (err) {
-			if (err) {
-				req.logger.log(err);
+		if (!req.body.title || !req.body.content) {
+			req.flash('error', {
+				title: 'Пожалуйста, введите Тему и Содержание.'
+			});
+			return res.redirect(req.path);
+		}
+
+		_.when(userUtils.findUser(locals.user)).then(function (result) {
+			if (_.isError(result)) {
+				req.logger.log(result);
+				return res.redirect('/');
 			}
-			res.redirect('/');
+			if (!result) {
+				return res.redirect('/');
+			}
+
+			var newTopic = new Topic.model({
+				author: result,
+				title: req.body.title,
+				content: req.body.content
+			});
+
+			newTopic.save(function (err) {
+				if (err) {
+					req.logger.log(err);
+				}
+				res.redirect('/');
+			});
 		});
 	});
 

@@ -10,8 +10,7 @@ var User = new keystone.List('User');
 
 User.add({
 	login: {type: Types.Key, required: true, index: true, initial: true},
-	password: {type: Types.Password, initial: true, required: false},
-	topics: {type: Types.Relationship, ref: 'Topic', many: true}
+	password: {type: Types.Password, initial: true, required: false}
 }, 'Permissions', {
 	isAdmin: {type: Boolean, label: 'Can access Keystone', index: true}
 });

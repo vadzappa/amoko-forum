@@ -1,20 +1,22 @@
 {{!< default}}
 <div class="container">
-    <form method="post" class="row">
-        <input type="hidden" name="action" value="topic.create"/>
-		
-        <div class="form-group">
-			<label for="topic-title">Тема вопроса</label>
-            <input class="form-control" type="text" id="topic-title" name="title" placeholder="Тема вопроса">
-        </div>
-		
-		<div class="form-group">
-			<label for="topic-content">Содержание</label>
-			<textarea class="form-control" id="topic-content" name="content" placeholder="Содержание"></textarea>
-        </div>
+	{{#unless @root.user.isAdmin}}
+        <form method="post" class="row">
+            <input type="hidden" name="action" value="topic.create"/>
 
-        <input class="btn btn-default" type="submit" value="Сохранить">
-    </form>
+            <div class="form-group">
+                <label for="topic-title">Тема вопроса</label>
+                <input class="form-control" type="text" id="topic-title" name="title" placeholder="Тема вопроса">
+            </div>
+
+            <div class="form-group">
+                <label for="topic-content">Содержание</label>
+                <textarea class="form-control" id="topic-content" name="content" placeholder="Содержание"></textarea>
+            </div>
+
+            <input class="btn btn-default" type="submit" value="Сохранить">
+        </form>
+	{{/unless}}
 	
 	{{#if data.posts.results.length}}
         <div class="row">
@@ -31,12 +33,7 @@
 				</h6>
 				
 				<p>{{content}}</p>
-				{{#if @root.user.isAdmin}}
-                    <a href="/answer/{{id}}">Ответить</a>
-				{{/if}}
-				{{#unless @root.user.isAdmin}}
-                    <a href="/comment/{{id}}">Комментировать</a>
-				{{/unless}}
+                <a class="btn btn-default" href="/answer/{{id}}">Ответить/Комментировать</a>
 			</div>
 		{{/each}}
         <div class="row">
