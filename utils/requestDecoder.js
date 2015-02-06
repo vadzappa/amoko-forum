@@ -3,15 +3,16 @@
  * Date: 2/5/2015
  */
 
-var crypto = require('crypto'),
-	password = process.env.NODE_PASSWORD || 'zgt9HHHDXfRMC5goa4nI0w==';
-
-var decodeMessage = function decodeMessage(password, message) {
-	return message;
-};
+var sjcl = require('sjcl'),
+	base64 = require('./base64'),
+	password = process.env.NODE_PASSWORD || 'wfF9cjDrZ4s43dtT8GMWn9Y3y3483Z8Z';
 
 exports = module.exports = {
 	decryptString: function decryptString(encrypted) {
-		return decodeMessage(password, encrypted);
+		try {
+			return sjcl.decrypt(password, base64.decode(encrypted));
+		} catch (e) {
+			return null;
+		}
 	}
 };

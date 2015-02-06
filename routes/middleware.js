@@ -11,7 +11,8 @@
 var _ = require('lodash'),
 	keystone = require('keystone'),
 	User = keystone.list('User'),
-	loginUtils = require('../utils/loginUtil');
+	loginUtils = require('../utils/loginUtil'),
+	requestDecoder = require('../utils/requestDecoder');
 
 var internals = {
 	findAndStoreUserByLogin: function findAndStoreUserByLogin(login, req, next) {
@@ -23,7 +24,7 @@ var internals = {
 		});
 	},
 	storeUserFromQuery: function storeUserFromQuery(req, next) {
-		internals.findAndStoreUserByLogin(req.query.user, req, next);
+		internals.findAndStoreUserByLogin(requestDecoder.decryptString(req.query.user), req, next);
 	}
 };
 
