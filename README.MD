@@ -7,3 +7,4 @@ Configuration
 4. set _NODE_ADMIN_PASSWORD_
 5. set _NODE_COOKIE_SECRET_
 6. set _NODE_PASSWORD_
+7. npm install -g node-windows

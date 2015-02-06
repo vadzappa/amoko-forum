@@ -1,5 +1,9 @@
 // Simulate config options from your production environment by
 // customising the .env file in your project's root folder.
+
+//fix F*** keystone bug with folders and so on :)
+process.chdir(__dirname);
+
 require('dotenv').load();
 
 // Require keystone
