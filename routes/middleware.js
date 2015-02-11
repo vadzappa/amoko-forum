@@ -12,6 +12,7 @@ var _ = require('lodash'),
 	keystone = require('keystone'),
 	User = keystone.list('User'),
 	loginUtils = require('../utils/loginUtil'),
+	config = require('../utils/config'),
 	requestDecoder = require('../utils/requestDecoder');
 
 var internals = {
@@ -46,7 +47,7 @@ module.exports = {
 		var locals = res.locals;
 
 		locals.navLinks = [
-			{label: 'Консультация', key: 'home', href: '/'}
+			{label: config.navLabel, key: 'home', href: '/'}
 		];
 
 		locals.data = {};
